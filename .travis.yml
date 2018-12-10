@@ -1,7 +1,6 @@
 language: go
 go:
-- '1.0'
-- '1.3'
+- '1.10'
 deploy:
   provider: releases
   api_key:
@@ -10,3 +9,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: md-irohas/geoipcli-go
+    tags: true

@@ -8,6 +8,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -52,64 +54,133 @@ func PrintVersion() {
 }
 
 func main() {
+	// Reset log format.
+	log.SetFlags(0)
+
 	// Paths to GeoIP database files.
-	paths := map[string]*string{}
-	paths["country"] = flag.String("country", "", "Path to GeoIP2/GeoLite-Country database.")
-	paths["city"] = flag.String("city", "", "Path to GeoIP2/GeoLite-City database.")
-	paths["asn"] = flag.String("asn", "", "Path to GeoLite-ASN database.")
-	paths["isp"] = flag.String("isp", "", "Path to GeoIP2-ISP database.")
-	paths["domain"] = flag.String("domain", "", "Path to GeoIP2-Domain database.")
-	paths["connection_type"] = flag.String("contype", "", "Path to GeoIP2-ConnectionType database.")
-	paths["anonymousip"] = flag.String("anonymousip", "", "Path to GeoIP2-AnonymousIP database.")
+	var countryPath, cityPath, asnPath, ispPath, domainPath, contypePath, anonymousipPath, enterprisePath string
+	flag.StringVar(&countryPath, "country", "", "Path to GeoIP2/GeoLite-Country database.")
+	flag.StringVar(&cityPath, "city", "", "Path to GeoIP2/GeoLite-City database.")
+	flag.StringVar(&asnPath, "asn", "", "Path to GeoLite-ASN database.")
+	flag.StringVar(&ispPath, "isp", "", "Path to GeoIP2-ISP database.")
+	flag.StringVar(&domainPath, "domain", "", "Path to GeoIP2-Domain database.")
+	flag.StringVar(&contypePath, "contype", "", "Path to GeoIP2-ConnectionType database.")
+	flag.StringVar(&anonymousipPath, "anonymousip", "", "Path to GeoIP2-AnonymousIP database.")
+	flag.StringVar(&enterprisePath, "enterprise", "", "Path to GeoIP2-Enterprise database.")
 
 	// Output params.
 	var outputFormat, outputColumnString string
-	// flag.StringVar(&outputFormat, "format", "csv", "Output format [csv/json].")
+	flag.StringVar(&outputFormat, "format", "", "Output format.")
 	flag.StringVar(&outputColumnString, "output", "", "Output columns separated by comma (,). See '--list-columns' option for more details.")
-
-	// TODO: Add support of other output format.
-	outputFormat = "csv"
 
 	// Flags
 	var showColumns, showVersion, skipInvalidIP bool
 	flag.BoolVar(&showColumns, "list-columns", false, "Show all column names.")
 	flag.BoolVar(&showVersion, "version", false, "Show version and exit.")
-	flag.BoolVar(&skipInvalidIP, "skip", false, "Skip ")
+	flag.BoolVar(&skipInvalidIP, "skip-invalid-ip", false, "Skip Invalid IP addresses.")
 	flag.BoolVar(&Debug, "debug", false, "Run this program as debug mode.")
 
 	// Files
-	// conffile := flag.String("conffile", "", "Configuration file.")
+	conffile := flag.String("conffile", "", "Config file.")
 	filename := flag.String("readfile", "", "Read IP addresses from file.")
 
 	flag.Parse()
-
-	if showColumns {
-		PrintColumns()
-		os.Exit(0)
-	}
 
 	if showVersion {
 		PrintVersion()
 		os.Exit(0)
 	}
 
-	// Reset log format.
-	log.SetFlags(0)
+	if showColumns {
+		PrintColumns()
+		os.Exit(0)
+	}
+
+	// Divide raw string of output columns to a list of column names.
+	var outputColumns []string
+	if outputColumnString != "" {
+		outputColumnString = strings.ToLower(outputColumnString)
+		outputColumns = strings.Split(outputColumnString, ",")
+	}
+
+	// Load default configurations from the default files,
+	// load configurations from the specified file,
+	// and overwrite the arguments to the Config variable.
+	LoadDefaultConfigs()
+
+	if *conffile != "" {
+		LoadConfig(*conffile)
+	}
+
+	paths := Config.Paths
+	if countryPath != "" {
+		paths.Country = countryPath
+	}
+	if cityPath != "" {
+		paths.City = cityPath
+	}
+	if asnPath != "" {
+		paths.ASN = asnPath
+	}
+	if ispPath != "" {
+		paths.ISP = ispPath
+	}
+	if domainPath != "" {
+		paths.Domain = domainPath
+	}
+	if contypePath != "" {
+		paths.ConnectionType = contypePath
+	}
+	if anonymousipPath != "" {
+		paths.AnonymousIP = anonymousipPath
+	}
+	if enterprisePath != "" {
+		paths.Enterprise = enterprisePath
+	}
+
+	output := Config.Output
+	if outputFormat != "" {
+		output.Format = outputFormat
+	}
+	if len(outputColumns) > 0 {
+		output.Columns = outputColumns
+	}
+	if skipInvalidIP {
+		output.SkipInvalidIP = skipInvalidIP
+	}
+
+	// If output columns are not given, use default list of colums.
+	useDefaultOutputColumns := (len(output.Columns) == 0)
+	if useDefaultOutputColumns {
+		if Debug {
+			log.Println("[*] Output columns not found. Use default ones.")
+		}
+	}
 
 	// Load GeoIP databases from files.
 	// Blank paths are skipped, and the program exits if it fails to open GeoIP
 	// databases. If the string of the output column is empty, build a list of
 	// default output columns.
-	useDefaultOutputColumns := (outputColumnString == "")
+	dbpaths := map[string]string{
+		"country":         paths.Country,
+		"city":            paths.City,
+		"asn":             paths.ASN,
+		"isp":             paths.ISP,
+		"domain":          paths.Domain,
+		"connection_type": paths.ConnectionType,
+		"anonymousip":     paths.AnonymousIP,
+		"enterprise":      paths.Enterprise,
+	}
 
+	var defaultColumns []string
 	dbs := map[string]*geoip2.Reader{}
 
-	for key, path := range paths {
-		if *path == "" {
+	for key, dbpath := range dbpaths {
+		if dbpath == "" {
 			continue
 		}
 
-		db, err := geoip2.Open(*path)
+		db, err := geoip2.Open(dbpath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -119,37 +190,35 @@ func main() {
 		if useDefaultOutputColumns {
 			switch key {
 			case "country":
-				outputColumnString += "country.country.iso_code,"
+				defaultColumns = append(defaultColumns, "country.country.iso_code")
 			case "city":
-				outputColumnString += "city.country.iso_code,city.city.names.en,"
+				defaultColumns = append(defaultColumns, "city.country.iso_code", "city.city.names.en")
 			case "asn":
-				outputColumnString += "asn.autonomous_system_number,asn.autonomous_system_number,"
+				defaultColumns = append(defaultColumns, "asn.autonomous_system_number", "asn.autonomous_system_number")
 			case "isp":
-				outputColumnString += "isp.autonomous_system_number,isp.autonomous_system_number,"
+				defaultColumns = append(defaultColumns, "isp.autonomous_system_number", "isp.autonomous_system_number")
 			case "domain":
-				outputColumnString += "domain.domain,"
+				defaultColumns = append(defaultColumns, "domain.domain")
 			case "connection_type":
-				outputColumnString += "connection_type.connection_type,"
+				defaultColumns = append(defaultColumns, "connection_type.connection_type")
 			case "anonymousip":
-				outputColumnString += "anonymousip.is_anonymous,"
+				defaultColumns = append(defaultColumns, "anonymousip.is_anonymous")
 			}
 		}
 	}
 
 	if useDefaultOutputColumns {
-		outputColumnString = strings.Trim(outputColumnString, ",")
+		output.Columns = defaultColumns
 	}
 
 	if len(dbs) == 0 {
-		log.Fatal("No database.")
+		log.Fatal("No databases.")
+	}
+	if len(output.Columns) == 0 {
+		log.Fatal("No output columns.")
 	}
 
-	// Divide raw string of output columns to a list of column names, and check
-	// the columns names.
-	outputColumnString = strings.ToLower(outputColumnString)
-	outputColumns := strings.Split(outputColumnString, ",")
-
-	for _, column := range outputColumns {
+	for _, column := range output.Columns {
 		labels := strings.Split(column, ".")
 		if len(labels) < 2 {
 			log.Fatal("Invalid column name: ", column)
@@ -166,37 +235,54 @@ func main() {
 		}
 	}
 
+	if Debug {
+		log.Println("[+] Output:", strings.Join(output.Columns, ", "))
+	}
+
 	// Select writer.
 	var writer *Writer
 
-	switch outputFormat {
+	switch output.Format {
 	case "csv":
 		writer = NewCSVWriter(os.Stdout)
 	default:
-		log.Fatal("Unsupported output format: ", outputFormat)
+		log.Fatal("Unsupported output format: ", output.Format)
 	}
 
 	// Array to hold the results of lookups.
-	results := make([]string, len(outputColumns)+1)
+	results := make([]string, len(output.Columns)+1)
 
-	// Function to look up and print
+	// Function to look up the IP addresses on the GeoIP databases,
+	// and print the lookup results.
 	lookupAndPrint := func(address string) {
 		address = strings.TrimSpace(address)
 		ip := net.ParseIP(address)
-
 		if ip == nil {
-			if skipInvalidIP {
+			if output.SkipInvalidIP {
+				if Debug {
+					log.Println("[-] Invalid IP address: ", address)
+				}
 			} else {
-				log.Fatal("Invalid IP address: ", address)
+				log.Fatalln("[-] Invalid IP address: ", address)
 			}
 		}
 
+		// The first columns is the IP address.
 		results[0] = address
 
-		for index, column := range outputColumns {
+		// Look up the IP address based on the column name.
+		for index, column := range output.Columns {
 			var record interface{}
 			var err error
 
+			// Parse the column name, select the database, and look up the IP
+			// address on the database. The GeoIP2-Enterprise database is a
+			// all-in-one database, so if available, the database is used to
+			// look up.
+			//
+			// e.g. country.country.names.en
+			//        ^^
+			//      prefix
 			labels := strings.Split(column, ".")
 
 			prefix := labels[0]
@@ -217,14 +303,29 @@ func main() {
 				record, err = dbs["anonymousip"].AnonymousIP(ip)
 			}
 
-			result := ""
+			// Extract the result of the lookup from the record, and store it
+			// to results array.
+			var result string
 
 			if err == nil {
 				key := strings.Join(labels[1:], ".")
 				flatRecord := Flatten(record)
-				if r, ok := flatRecord[key].(string); ok {
-					result = r
+				switch flatRecord[key].(type) {
+				case string:
+					if res, ok := flatRecord[key].(string); ok {
+						result = res
+					}
+				case uint:
+					if res, ok := flatRecord[key].(uint); ok {
+						result = strconv.FormatUint(uint64(res), 10)
+					}
+				case nil:
+					result = ""
+				default:
+					log.Fatal("Unknown result type.", key, reflect.TypeOf(flatRecord[key]))
 				}
+			} else {
+				result = ""
 			}
 
 			results[index+1] = result
@@ -233,26 +334,33 @@ func main() {
 		writer.Write(results)
 	}
 
-	// Read IP addresses from arguments or file (stdin/file), look up the IP
-	// addresses from GeoIP databases, and print the results to stdout.
+	// Read IP addresses from arguments/stdin/file,
+	// look up the IP addresses on the GeoIP databases,
+	// and print the results to stdout.
 	args := flag.Args()
 
+	// from arguments
 	if len(args) > 0 {
 		for _, address := range args {
 			lookupAndPrint(address)
 		}
+
+		// from stdin/file
 	} else {
 		var fp *os.File
 		var err error
 
-		if *filename != "" {
+		// from stdin
+		if *filename == "" {
+			fp = os.Stdin
+
+			// from file
+		} else {
 			fp, err = os.Open(*filename)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal("[-] Failed to open file: ", err)
 			}
 			defer fp.Close()
-		} else {
-			fp = os.Stdin
 		}
 
 		s := bufio.NewScanner(fp)

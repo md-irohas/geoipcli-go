@@ -1,0 +1,25 @@
+#
+# Path to GeoIP2/GeoLite databases.
+#
+paths:
+    country: null
+    city: null
+    asn: null
+    isp: null
+    domain: null
+    connection_type: null
+    anonymousip: null
+    enterprise: null
+
+#
+# Output params
+#
+output:
+    # Output format (pretty, csv, json)
+    format: csv
+    # List of column names to be printed.
+    # See ./geoipcli --list-columns for more details.
+    columns: null
+    # Skip invalid IP addresses.
+    # If false, the program exits when it encounters invalid IP addresses.
+    skip_invalid_ip: false

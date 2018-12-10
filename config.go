@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/go-yaml/yaml"
+	// "github.com/go-yaml/yaml"
 	"github.com/imdario/mergo"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"

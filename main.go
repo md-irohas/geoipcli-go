@@ -319,6 +319,14 @@ func main() {
 					if res, ok := flatRecord[key].(uint); ok {
 						result = strconv.FormatUint(uint64(res), 10)
 					}
+				case float64:
+					if res, ok := flatRecord[key].(float64); ok {
+						result = strconv.FormatFloat(res, 'f', -1, 64)
+					}
+				case bool:
+					if res, ok := flatRecord[key].(bool); ok {
+						result = strconv.FormatBool(res)
+					}
 				case nil:
 					result = ""
 				default:

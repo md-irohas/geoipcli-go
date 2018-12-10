@@ -6,7 +6,7 @@ deploy:
   provider: releases
   api_key:
     secure: y/L+KIs/asspGBLnXDBTZ0PYlPQDpV88xhnXCwGWTZL6Wn1v0cVQcGFj3vcAIX2ERzHULic5Wqs61myJZbbLII3TLVOapl+fxIKkBZJo39jkyu/cZY1fYJZeiTRtPOxt0i7vgBNjl0vD7P2Ntu7rZWLo5ROoN5lyPQ0SW20UdjPHBpQIeqc/ZslldGmZTViQGrj2PTmLOW023r7ZV+XYYdYlatijlqSWbDoXQhZML0jbx0F8eFfLHlYAEyo0Om1jkpXPjp7QCOhQeqQ8bBmrI4qrpvEsQHcyijNyHvGE3R7P/DLDiCC3nvZAv8FutFDiExeWYg1/UtWa4LPtGcrxqzpU9Q8TylFBpFkrnpULTIycRPCrRpVOprvjopmNz4BJDRoGBMBtbdRtmil7Z+Ib1cl1ZNL0BHyJCFFSK+Zx9/inbgRyyBpSReCf6D5ySX+XwVTNPudqL1DM263I9WHglMHydj3FVXxGuKt5RhI+4PtBYyDnmwV8fjzxtzH9mBN3FAiCcdPltq1z8WuhOpKm3vfVQB31FnuW0y2FBCUwF/hHYsg7BEq/JL7vhQsyeDP9MwyftIDB8L7nnf/wxhZqteThPG/0L6Dnc2vzrF3i/O/ka607RdeB0i6QRILzGUZCNsfrO3oqOsjBgTpf0Zc1VcI+r+O2//YzkZMIxNBW6pY=
-  file: geoipcli
+  file: geoipcli-go
   on:
     tags: true
     repo: md-irohas/geoipcli-go

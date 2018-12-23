@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/oschwald/geoip2-golang"
+	"gopkg.in/mattes/go-expand-tilde.v1"
 	"log"
 	"net"
 	"os"
@@ -86,7 +87,7 @@ func main() {
 
 	// Files
 	conffile := flag.String("conffile", "", "Config file.")
-	filename := flag.String("readfile", "", "Read IP addresses from file.")
+	readfile := flag.String("readfile", "", "Read IP addresses from file.")
 
 	flag.Parse()
 
@@ -113,7 +114,12 @@ func main() {
 	LoadDefaultConfigs()
 
 	if *conffile != "" {
-		LoadConfig(*conffile)
+		filename, err := tilde.Expand(*conffile)
+		if err != nil {
+			log.Fatal("[-] Failed to expand filename:", err)
+		}
+
+		LoadConfig(filename)
 	}
 
 	paths := Config.Paths
@@ -181,6 +187,11 @@ func main() {
 	for key, dbpath := range dbpaths {
 		if dbpath == "" {
 			continue
+		}
+
+		dbpath, err := tilde.Expand(dbpath)
+		if err != nil {
+			log.Fatal("[-] Failed to expand dbpath:", err)
 		}
 
 		db, err := geoip2.Open(dbpath)
@@ -355,19 +366,25 @@ func main() {
 		for _, address := range args {
 			lookupAndPrint(address)
 		}
-
 	} else {
 		// from stdin/file
 		var fp *os.File
-		var err error
 
-		if *filename == "" {
+		if *readfile == "" {
 			// from stdin
 			fp = os.Stdin
-
 		} else {
 			// from file
-			fp, err = os.Open(*filename)
+			filename, err := tilde.Expand(*readfile)
+			if err != nil {
+				log.Fatal("[-] Failed to expand filename:", err)
+			}
+
+			if Debug {
+				log.Println("[+] Read IP addresses from:", filename)
+			}
+
+			fp, err = os.Open(filename)
 			if err != nil {
 				log.Fatal("[-] Failed to open file: ", err)
 			}

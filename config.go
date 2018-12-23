@@ -4,6 +4,7 @@ import (
 	// "github.com/go-yaml/yaml"
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
+	"gopkg.in/mattes/go-expand-tilde.v1"
 	"io/ioutil"
 	"log"
 	"os"
@@ -44,17 +45,22 @@ func fileExists(filename string) bool {
 
 func LoadDefaultConfigs() {
 	for _, path := range []string{DEFAULT_CONFIG_PATH1, DEFAULT_CONFIG_PATH2} {
-		if !fileExists(path) {
+		filename, err := tilde.Expand(path)
+		if err != nil {
+			log.Fatal("[-] Failed to expand filename:", err)
+		}
+
+		if !fileExists(filename) {
 			if Debug {
-				log.Println("[-] Skip default config (not found):", path)
+				log.Println("[-] Skip default config (not found):", filename)
 			}
 			continue
 		}
 
 		if Debug {
-			log.Println("[+] Load default config:", path)
+			log.Println("[+] Load default config:", filename)
 		}
-		LoadConfig(path)
+		LoadConfig(filename)
 	}
 }
 

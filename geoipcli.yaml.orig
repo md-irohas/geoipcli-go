@@ -9,7 +9,6 @@ paths:
     domain: null
     connection_type: null
     anonymousip: null
-    enterprise: null
 
 #
 # Output params

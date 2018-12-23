@@ -58,7 +58,8 @@ func main() {
 	log.SetFlags(0)
 
 	// Paths to GeoIP database files.
-	var countryPath, cityPath, asnPath, ispPath, domainPath, contypePath, anonymousipPath, enterprisePath string
+	var countryPath, cityPath, asnPath, ispPath, domainPath, contypePath, anonymousipPath string
+	//, enterprisePath string
 	flag.StringVar(&countryPath, "country", "", "Path to GeoIP2/GeoLite-Country database.")
 	flag.StringVar(&cityPath, "city", "", "Path to GeoIP2/GeoLite-City database.")
 	flag.StringVar(&asnPath, "asn", "", "Path to GeoLite-ASN database.")
@@ -66,7 +67,7 @@ func main() {
 	flag.StringVar(&domainPath, "domain", "", "Path to GeoIP2-Domain database.")
 	flag.StringVar(&contypePath, "contype", "", "Path to GeoIP2-ConnectionType database.")
 	flag.StringVar(&anonymousipPath, "anonymousip", "", "Path to GeoIP2-AnonymousIP database.")
-	flag.StringVar(&enterprisePath, "enterprise", "", "Path to GeoIP2-Enterprise database.")
+	// flag.StringVar(&enterprisePath, "enterprise", "", "Path to GeoIP2-Enterprise database.")
 
 	// Output params.
 	var outputFormat, outputColumnString string
@@ -81,7 +82,7 @@ func main() {
 	flag.BoolVar(&showColumns, "list-columns", false, "Show all column names.")
 	flag.BoolVar(&showVersion, "version", false, "Show version and exit.")
 	flag.BoolVar(&skipInvalidIP, "skip-invalid-ip", false, "Skip Invalid IP addresses.")
-	flag.BoolVar(&Debug, "debug", false, "Run this program as debug mode.")
+	flag.BoolVar(&Debug, "debug", false, "Run this program as debug mode w/ debug message.")
 
 	// Files
 	conffile := flag.String("conffile", "", "Config file.")
@@ -137,9 +138,9 @@ func main() {
 	if anonymousipPath != "" {
 		paths.AnonymousIP = anonymousipPath
 	}
-	if enterprisePath != "" {
-		paths.Enterprise = enterprisePath
-	}
+	// if enterprisePath != "" {
+	// 	paths.Enterprise = enterprisePath
+	// }
 
 	output := Config.Output
 	if outputFormat != "" {
@@ -171,7 +172,7 @@ func main() {
 		"domain":          paths.Domain,
 		"connection_type": paths.ConnectionType,
 		"anonymousip":     paths.AnonymousIP,
-		"enterprise":      paths.Enterprise,
+		// "enterprise":      paths.Enterprise,
 	}
 
 	var defaultColumns []string

@@ -196,7 +196,7 @@ func main() {
 
 		db, err := geoip2.Open(dbpath)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("[-] Failed to read GeoIP database:", err)
 		}
 
 		dbs[key] = db

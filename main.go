@@ -34,7 +34,7 @@ func PrintColumns() {
 	records["connection_type"] = geoip2.ConnectionType{}
 	records["anonymousip"] = geoip2.AnonymousIP{}
 
-	fmt.Println("The following columns can be used for output (--output option).")
+	fmt.Println("The following columns can be used for output (-output option).")
 	fmt.Println("")
 	fmt.Println("List of columns:")
 
@@ -76,14 +76,14 @@ func main() {
 	// lines will be fixed.
 	// flag.StringVar(&outputFormat, "format", "", "Output format.")
 	outputFormat = "csv"
-	flag.StringVar(&outputColumnString, "output", "", "Output columns separated by comma (,). See '--list-columns' option for more details.")
+	flag.StringVar(&outputColumnString, "output", "", "Output columns separated by comma (,). See '-list-columns' option for more details.")
 
 	// Flags
 	var showColumns, showVersion, skipInvalidIP bool
 	flag.BoolVar(&showColumns, "list-columns", false, "Show all column names.")
 	flag.BoolVar(&showVersion, "version", false, "Show version and exit.")
-	flag.BoolVar(&skipInvalidIP, "skip-invalid-ip", false, "Skip Invalid IP addresses.")
-	flag.BoolVar(&Debug, "debug", false, "Run this program as debug mode w/ debug message.")
+	flag.BoolVar(&skipInvalidIP, "skip-invalid-ip", false, "Skip invalid IP addresses.")
+	flag.BoolVar(&Debug, "debug", false, "Run this program as debug mode w/ messages.")
 
 	// Files
 	conffile := flag.String("conffile", "", "Config file.")

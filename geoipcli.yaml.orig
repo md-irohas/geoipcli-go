@@ -1,3 +1,5 @@
+# geoipcli.yaml.orig
+
 #
 # Path to GeoIP2/GeoLite databases.
 #
@@ -17,8 +19,20 @@ output:
     # Output format (pretty, csv, json)
     format: csv
     # List of column names to be printed.
-    # See ./geoipcli --list-columns for more details.
+    # See ./geoipcli -list-columns for more details.
     columns: null
+    #
+    # columns:
+    #     - city.country.names.en
+    #     - city.country.iso_code
+    #     - city.city.names.en
+    #     - city.location.latitude
+    #     - city.country.is_in_european_union
+    #     - isp.autonomous_system_number
+    #     - isp.autonomous_system_organization
+    #     - domain.domain
+    #     - connection_type.connection_type
+    #
     # Skip invalid IP addresses.
     # If false, the program exits when it encounters invalid IP addresses.
     skip_invalid_ip: false

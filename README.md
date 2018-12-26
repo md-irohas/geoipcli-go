@@ -76,7 +76,6 @@ Usage of ./geoipcli
     	Skip Invalid IP addresses.
   -version
     	Show version and exit.
-exit status 2
 ```
 
 
@@ -232,7 +231,7 @@ and specific configurations such as column names to be printed in a file passed 
 
 ### Misc
 
-By default, `geoipcli` halts when it gets an invalid IP address.
+By default, `geoipcli-go` halts when it gets an invalid IP address.
 This is useful to prevent you from making errors in analysis.
 If you want to skip invalid IP addresses, use `-skip-invalid-ip` option.
 

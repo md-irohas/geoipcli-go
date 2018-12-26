@@ -61,9 +61,9 @@ func main() {
 	// Paths to GeoIP database files.
 	var countryPath, cityPath, asnPath, ispPath, domainPath, contypePath, anonymousipPath string
 	//, enterprisePath string
-	flag.StringVar(&countryPath, "country", "", "Path to GeoIP2/GeoLite-Country database.")
-	flag.StringVar(&cityPath, "city", "", "Path to GeoIP2/GeoLite-City database.")
-	flag.StringVar(&asnPath, "asn", "", "Path to GeoLite-ASN database.")
+	flag.StringVar(&countryPath, "country", "", "Path to GeoIP2/GeoLite2-Country database.")
+	flag.StringVar(&cityPath, "city", "", "Path to GeoIP2/GeoLite2-City database.")
+	flag.StringVar(&asnPath, "asn", "", "Path to GeoLite2-ASN database.")
 	flag.StringVar(&ispPath, "isp", "", "Path to GeoIP2-ISP database.")
 	flag.StringVar(&domainPath, "domain", "", "Path to GeoIP2-Domain database.")
 	flag.StringVar(&contypePath, "contype", "", "Path to GeoIP2-ConnectionType database.")

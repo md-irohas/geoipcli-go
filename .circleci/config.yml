@@ -29,7 +29,7 @@ jobs:
           name: "Publish Release on GitHub"
           command: |
             go get github.com/tcnksm/ghr
-            VERSION=$(/tmp/build/geoipcli-go-linux-amd64 -version)
+            VERSION=v$(/tmp/build/geoipcli-go-linux-amd64 -version)
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} /tmp/build/
 
 workflows:
@@ -38,11 +38,14 @@ workflows:
     jobs:
       - build:
           filters:
-            tags:
-              only: /^v\d+\.\d+\.\d+$/
             branches:
               only: master
 
       - deploy-to-github-release:
           requires:
             - build
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v\d+\.\d+\.\d+$/

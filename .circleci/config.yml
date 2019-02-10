@@ -14,6 +14,7 @@ jobs:
       - run: ./build.sh
       - store_artifacts:
           path: build/
+      - run: mkdir /tmp/build/
       - persist_to_workspace:
           root: build/
           paths:

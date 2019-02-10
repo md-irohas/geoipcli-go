@@ -38,14 +38,14 @@ workflows:
     jobs:
       - build:
           filters:
-            branches:
-              only: master
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
 
       - deploy-to-github-release:
           requires:
             - build
           filters:
             branches:
-              only: master
+              ignore: /.*/
             tags:
               only: /^v\d+\.\d+\.\d+$/

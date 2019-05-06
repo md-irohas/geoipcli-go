@@ -1,26 +1,12 @@
 package main
 
 import (
-	// "github.com/go-yaml/yaml"
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
-	"gopkg.in/mattes/go-expand-tilde.v1"
 	"io/ioutil"
-	"log"
-	"os"
 )
 
-const (
-	DEFAULT_CONFIG_PATH1 = "~/.config/geoipcli.yaml"
-	DEFAULT_CONFIG_PATH2 = "~/.geoipcli.yaml"
-)
-
-var (
-	// This is the master configuration data.
-	Config CLIConfig
-)
-
-type CLIConfig struct {
+type Config struct {
 	Paths struct {
 		Country        string `yaml:"country"`
 		City           string `yaml:"city"`
@@ -29,61 +15,39 @@ type CLIConfig struct {
 		Domain         string `yaml:"domain"`
 		ConnectionType string `yaml:"connection_type"`
 		AnonymousIP    string `yaml:"anonymousip"`
-		Enterprise     string `yaml:"enterprise"`
 	} `yaml:"paths"`
 	Output struct {
-		Format        string   `yaml:"format"`
-		Columns       []string `yaml:"columns"`
-		SkipInvalidIP bool     `yaml:"skip_invalid_ip"`
+		// Output format (csv, tsv)
+		Format            string   `yaml:"format"`
+		// List of output columns.
+		Columns           []string `yaml:"columns"`
+		// Flag if commas are escaped.
+		EscapeComma       bool     `yaml:"escape_comma"`
+		// Flag if double quotes are escaped.
+		EscapeDoubleQuote bool     `yaml:"escape_double_quote"`
+		// Flag if invalid IP addresses are skipped.
+		SkipInvalidIP     bool     `yaml:"skip_invalid_ip"`
 	} `yaml:"output"`
 }
 
-func fileExists(filename string) bool {
-	_, err := os.Stat(filename)
-	return err == nil
-}
-
-func LoadDefaultConfigs() {
-	for _, path := range []string{DEFAULT_CONFIG_PATH1, DEFAULT_CONFIG_PATH2} {
-		filename, err := tilde.Expand(path)
-		if err != nil {
-			log.Fatal("[-] Failed to expand filename:", err)
-		}
-
-		if !fileExists(filename) {
-			if Debug {
-				log.Println("[-] Skip default config (not found):", filename)
-			}
-			continue
-		}
-
-		if Debug {
-			log.Println("[+] Load default config:", filename)
-		}
-		LoadConfig(filename)
-	}
-}
-
-// Load data from file,
-// parse the data as YAML format,
-// merge the structured data to the master config data.
-func LoadConfig(filename string) {
-	if Debug {
-		log.Println("[+] Load config:", filename)
-	}
-
+// Load configuration data from file and merge the data to the config data.
+func LoadConfig(config *Config, filename string) error {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Fatalln("[-] Failed to read config file:", err)
+		return err
 	}
 
-	c := CLIConfig{}
+	c := Config{}
+
 	err = yaml.Unmarshal(data, &c)
 	if err != nil {
-		log.Fatalln("[-] Failed to parse config file:", err)
+		return err
 	}
 
-	if err := mergo.Merge(&Config, c); err != nil {
-		log.Fatalln("[-] Failed to merge config data:", err)
+	err = mergo.Merge(config, c)
+	if err != nil {
+		return err
 	}
+
+	return nil
 }

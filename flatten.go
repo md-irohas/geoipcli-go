@@ -1,6 +1,14 @@
-package main
+// This file is a modified code of the following repository.
+// https://github.com/doublerebel/bellows/blob/master/main.go
+//
+// The original copyright is as follows:
 
-// https://github.com/doublerebel/bellows
+// Copyright © 2016 Charles Phillips <charles@doublerebel.com>.
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file.
+
+package main
 
 import (
 	"reflect"

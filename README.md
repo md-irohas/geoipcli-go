@@ -9,7 +9,7 @@ So, I wrote `geoipcli-go`.
 
 
 Main functions:
-* Search for the geolocation data of IP addresses on downloadable GeoIP databases.
+* Search for the geolocation data of IP addresses from downloadable GeoIP databases.
   * You can pass IP addresses through arguments, stdin, or a file.
 * Flexible output columns.
 * Support of configuration files.
@@ -19,7 +19,7 @@ Main functions:
 
 ### Pre-compiled binaries
 
-Precompiled binaries for macOS / Linux (x86_64) are released.
+Precompiled binaries for macOS / Linux (x86_64) / windows are released.
 See [release](https://github.com/md-irohas/geoipcli-go/releases) page.
 
 These binaries are static linked, so you can use them w/o any additional libraries.
@@ -47,39 +47,45 @@ The followings are the options of `geoipcli-go`.
 You can also use configuration files instead of these options (See the following example).
 
 ```
-Usage of ./geoipcli
+Usage of ./build/geoipcli-go-macos-amd64:
   -anonymousip string
-    	Path to GeoIP2-AnonymousIP database.
+        Path to GeoIP2-AnonymousIP database.
   -asn string
-    	Path to GeoLite2-ASN database.
+        Path to GeoLite2-ASN database.
   -city string
-    	Path to GeoIP2/GeoLite2-City database.
+        Path to GeoIP2/GeoLite2-City database.
   -conffile string
-    	Config file.
+        Config file.
   -contype string
-    	Path to GeoIP2-ConnectionType database.
+        Path to GeoIP2-Connection-Type database.
   -country string
-    	Path to GeoIP2/GeoLite2-Country database.
+        Path to GeoIP2/GeoLite2-Country database.
   -debug
-    	Run this program as debug mode w/ debug message.
+        Run this program as debug mode w/ messages.
+  -do-not-escape-comma
+        Do NOT escape commas in output. (default true)
+  -do-not-escape-double-quote
+        Do NOT escape double quotes in output. (default true)
   -domain string
-    	Path to GeoIP2-Domain database.
+        Path to GeoIP2-Domain database.
+  -format string
+        Output format (csv, tsv).
   -isp string
-    	Path to GeoIP2-ISP database.
+        Path to GeoIP2-ISP database.
   -list-columns
-    	Show all column names.
+        Show all column names and exit.
   -output string
-    	Output columns separated by comma (,). See '--list-columns' option for more details.
+        Output columns separated by comma (,). See '-list-columns' option for more details.
   -readfile string
-    	Read IP addresses from file.
+        Read IP addresses from file.
   -skip-invalid-ip
-    	Skip Invalid IP addresses.
+        Skip invalid IP addresses.
   -version
-    	Show version and exit.
+        Show version and exit.
 ```
 
 
-### Download Databases
+### GeoIP Databases
 
 MaxMind provides two types of downloadable GeoIP databases.
 
@@ -94,18 +100,32 @@ MaxMind provides two types of downloadable GeoIP databases.
 This example looks up geolocation data of `1.1.1.1` and `8.8.8.8` using
 GeoLite2-ASN and GeoLite2-City.
 
-```
-$ geoipcli -asn GeoLite2-ASN.mmdb -city GeoLite2-City.mmdb 1.1.1.1 8.8.8.8
+```sh
+$ geoipcli -asn GeoLite2-ASN.mmdb -city GeoLite2-City.mmdb -debug 1.1.1.1 8.8.8.8
 
+[*] Skip loading default config (not found): ~/.config/geoipcli.yaml
+[*] Skip loading default config (not found): ~/.config/geoipcli.yml
+[*] Skip loading default config (not found): ~/.geoipcli.yaml
+[*] Skip loading default config (not found): ~/.geoipcli.yml
+[+] Load GeoIP city database: GeoLite2-City.mmdb
+[+] Load GeoIP asn database: GeoLite2-ASN.mmdb
+[*] Output columns not found. Use default columns.
+[+] Output: city.country.iso_code, city.city.names.en, asn.autonomous_system_number, asn.autonomous_system_organization
+[+] Read IP addresses from arguments.
 1.1.1.1,AU,,13335,Cloudflare<comma> Inc.
 8.8.8.8,US,,15169,Google LLC
 ```
 
-The results are printed as CSV format.
-The columns are IP address, country code, city name, AS number, and AS organization name.
+The results are printed as CSV format by default.
+The output columns are IP address, country code (city.country.iso\_code), city
+name (city.city.names.en), AS number (asn.autonomous\_system\_number), and AS
+organization name (autonomous\_system\_organization).
 
 The city columns are empty because they are not found in GeoLite2-City.mmdb.
 Plus, the comma (,) is replaced by `<commma>` not to break the CSV format.
+
+Note that the logging messages are printed to stderr and the lookup results are
+printed to stdout.
 
 
 ### Example-2: Flexible Output
@@ -113,7 +133,7 @@ Plus, the comma (,) is replaced by `<commma>` not to break the CSV format.
 You can set the columns to be printed.
 The following command shows the column names available in `geoipcli-go`.
 
-```
+```sh
 $ geoipcli -list-columns
 
 The following columns can be used for output (--output option).
@@ -184,23 +204,23 @@ Note:
 ```
 
 If you want to get country names in English and Japanese, country code, and a
-flag if the country is in EU from GeoLite2-Country.mmdb, type the following command.
+flag if the country is in EU from GeoLite2-Country.mmdb, type the following
+command.
 
-```
+```sh
 $ geoipcli -country GeoLite2-Country.mmdb -output country.country.names.en,country.country.names.ja,country.country.iso_code,country.country.is_in_european_union 1.1.1.1 8.8.8.8
 
 1.1.1.1,Australia,オーストラリア,AU,false
 8.8.8.8,United States,アメリカ合衆国,US,false
 ```
 
-The output option often becomes very long,
-so I recommend you use a configuration file (See Example-4).
+The output option often becomes so long that I recommend users use a
+configuration file (See Example-4).
 
 
 ### Example-3: Bulk Search
 
-To look up a lot of IP addresses,
-you can pass them through stdin or a file.
+To look up a lot of IP addresses, you can pass them through stdin or a file.
 
 ```
 # from standard input
@@ -218,22 +238,26 @@ $ geoipcli <options> -readfile IP-list.txt
 By default, `geoipcli` tries to read configurations from the following paths (if found).
 
 * ~/.config/geoipcli.yaml
+* ~/.config/geoipcli.yml
 * ~/.geoipcli.yaml
+* ~/.geoipcli.yml
 
 The template of the configuration file is [here](https://github.com/md-irohas/geoipcli-go/blob/master/geoipcli.yaml.orig).
 
 Also, you can pass the configuration file from the options (-conffile).
 
-The configuration files will be merged (overwritten),
-so I recommend you describe common configurations such as paths to databases in ~/.config/geoipcli.yaml,
-and specific configurations such as column names to be printed in a file passed to arguments.
+The configuration files will be merged (overwritten), so I recommend users
+describe common configurations such as paths to databases in
+~/.config/geoipcli.yaml and specific configurations such as column names in a
+file passed to arguments.
 
 
 ### Misc
 
 By default, `geoipcli-go` halts when it gets an invalid IP address.
 This is useful to prevent you from making errors in analysis.
-If you want to skip invalid IP addresses, use `-skip-invalid-ip` option.
+If you want to skip invalid IP addresses and continue to look up, use
+`-skip-invalid-ip` option.
 
 If you want to check the behavior of `geoipcli-go`, use `-debug` option.
 The details of logs are outputted to stderr.
@@ -244,8 +268,8 @@ The details of logs are outputted to stderr.
 ### Enterprise database
 
 MaxMind provides GeoIP2-Enterprise database which includes data of other types of GeoIP databases.
-I want to support it,
-but unfortunately, `geoipcli-go` does not fully support the database.
+Unfortunately, `geoipcli-go` does not support the database because the library
+this program uses does not support it.
 
 
 ## Alternatives
